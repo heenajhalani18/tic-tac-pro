@@ -149,17 +149,9 @@ npm run dev
 
 ---
 
-# Screenshots
-
-(Add screenshots/gifs here later)
-
----
-
 ## Author
 
 **Heena Jhalani**  
-Computer Science (AI) Student  
-Banasthali Vidyapith
 
 ---
 
