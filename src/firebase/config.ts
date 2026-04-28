@@ -3,12 +3,14 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDBk8LFVaS8Ej63eP2pRhgd0dGFoaIX1iw",
-  authDomain: "tic-tac-pro-1aa63.firebaseapp.com",
-  projectId: "tic-tac-pro-1aa63",
-  storageBucket: "tic-tac-pro-1aa63.firebasestorage.app",
-  messagingSenderId: "331590627215",
-  appId: "1:331590627215:web:f870f2754f8901590665fa"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket:
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId:
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
