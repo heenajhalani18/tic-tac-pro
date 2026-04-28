@@ -10,12 +10,18 @@ export default function GamePage() {
   const [isDraw, setIsDraw] = useState(false);
   const [gameMode, setGameMode] = useState<string | null>(null);
 
+  const [scores, setScores] = useState({
+    xWins: 0,
+    oWins: 0,
+    aiWins: 0,
+    draws: 0,
+  });
+
   const handleClick = (index: number) => {
     if (!gameMode || game.winner || isDraw) return;
 
     const updatedGame = new Game();
 
-    // preserve previous state
     updatedGame.board.grid = [...game.board.grid];
     updatedGame.currentPlayerIndex = game.currentPlayerIndex;
     updatedGame.winner = game.winner;
@@ -24,51 +30,82 @@ export default function GamePage() {
 
     if (!moveSuccess) return;
 
-    // draw check
-    if (
-      !updatedGame.winner &&
-      !updatedGame.board.grid.includes("")
-    ) {
+    // Human winner logic
+    if (updatedGame.winner) {
+      if (updatedGame.winner === "X") {
+        setScores((prev) => ({
+          ...prev,
+          xWins: prev.xWins + 1,
+        }));
+      } else if (updatedGame.winner === "O") {
+        if (gameMode === "ai") {
+          setScores((prev) => ({
+            ...prev,
+            aiWins: prev.aiWins + 1,
+          }));
+        } else {
+          setScores((prev) => ({
+            ...prev,
+            oWins: prev.oWins + 1,
+          }));
+        }
+      }
+    } 
+    else if (!updatedGame.board.grid.includes("")) {
       setIsDraw(true);
+
+      setScores((prev) => ({
+        ...prev,
+        draws: prev.draws + 1,
+      }));
     }
 
     setGame(updatedGame);
 
-// AI move logic
-if (
-  gameMode === "ai" &&
-  !updatedGame.winner
-) {
-  setTimeout(() => {
-    const aiGame = new Game();
+    // AI Move Logic
+    if (
+      gameMode === "ai" &&
+      !updatedGame.winner &&
+      !updatedGame.board.grid.includes("")
+    ) {
+      setTimeout(() => {
+        const aiGame = new Game();
 
-    aiGame.board.grid = [...updatedGame.board.grid];
-    aiGame.currentPlayerIndex =
-      updatedGame.currentPlayerIndex;
-    aiGame.winner = updatedGame.winner;
+        aiGame.board.grid = [...updatedGame.board.grid];
+        aiGame.currentPlayerIndex =
+          updatedGame.currentPlayerIndex;
+        aiGame.winner = updatedGame.winner;
 
-    const emptyCells = aiGame.board.grid.filter(
-  (cell) => cell === ""
-);
+        const emptyCells = aiGame.board.grid.filter(
+          (cell) => cell === ""
+        );
 
-if (emptyCells.length > 0) {
-  const bestMove = BotStrategy.getBestMove(
-    aiGame.board.grid
-  );
+        if (emptyCells.length > 0) {
+          const bestMove = BotStrategy.getBestMove(
+            aiGame.board.grid
+          );
 
-  aiGame.makeMove(bestMove);
+          aiGame.makeMove(bestMove);
 
-  if (
-    !aiGame.winner &&
-    !aiGame.board.grid.includes("")
-  ) {
-    setIsDraw(true);
-  }
+          if (aiGame.winner) {
+            setScores((prev) => ({
+              ...prev,
+              aiWins: prev.aiWins + 1,
+            }));
+          } 
+          else if (!aiGame.board.grid.includes("")) {
+            setIsDraw(true);
 
-  setGame(aiGame);
-}
-  }, 500);
-}
+            setScores((prev) => ({
+              ...prev,
+              draws: prev.draws + 1,
+            }));
+          }
+
+          setGame(aiGame);
+        }
+      }, 500);
+    }
   };
 
   const resetGame = () => {
@@ -80,9 +117,8 @@ if (emptyCells.length > 0) {
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black text-white flex flex-col items-center justify-center px-4">
       
-      {/* Background Glow */}
+      {/* Glow effects */}
       <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-
       <div className="absolute bottom-20 right-20 w-72 h-72 bg-purple-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
 
       {/* Confetti */}
@@ -93,11 +129,10 @@ if (emptyCells.length > 0) {
         />
       )}
 
-      {/* Game Mode Modal */}
+      {/* Mode selection */}
       {!gameMode && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-white/10 backdrop-blur-xl border border-gray-700 p-8 rounded-2xl text-center shadow-2xl">
-            
             <h2 className="text-2xl font-bold mb-6">
               Choose Game Mode
             </h2>
@@ -105,14 +140,14 @@ if (emptyCells.length > 0) {
             <div className="flex flex-col gap-4">
               <button
                 onClick={() => setGameMode("pvp")}
-                className="bg-white text-black px-6 py-3 rounded-xl font-semibold hover:scale-105 transition"
+                className="bg-white text-black px-6 py-3 rounded-xl font-semibold"
               >
                 Player vs Player
               </button>
 
               <button
                 onClick={() => setGameMode("ai")}
-                className="border border-gray-600 px-6 py-3 rounded-xl hover:bg-white/10 transition"
+                className="border border-gray-600 px-6 py-3 rounded-xl"
               >
                 Player vs AI
               </button>
@@ -121,7 +156,30 @@ if (emptyCells.length > 0) {
         </div>
       )}
 
-      {/* Heading */}
+      {/* Scoreboard */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 z-10">
+        <div className="bg-white/10 p-4 rounded-xl text-center">
+          <p>X Wins</p>
+          <h2 className="text-2xl font-bold">{scores.xWins}</h2>
+        </div>
+
+        <div className="bg-white/10 p-4 rounded-xl text-center">
+          <p>O Wins</p>
+          <h2 className="text-2xl font-bold">{scores.oWins}</h2>
+        </div>
+
+        <div className="bg-white/10 p-4 rounded-xl text-center">
+          <p>AI Wins</p>
+          <h2 className="text-2xl font-bold">{scores.aiWins}</h2>
+        </div>
+
+        <div className="bg-white/10 p-4 rounded-xl text-center">
+          <p>Draws</p>
+          <h2 className="text-2xl font-bold">{scores.draws}</h2>
+        </div>
+      </div>
+
+      {/* Game Status */}
       <h1 className="text-4xl font-bold mb-8 text-center z-10">
         {game.winner
           ? `${game.winner} Wins 🎉`
@@ -151,7 +209,7 @@ if (emptyCells.length > 0) {
         ))}
       </div>
 
-      {/* Restart Button */}
+      {/* Reset */}
       <button
         onClick={resetGame}
         className="z-10 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition shadow-lg"
