@@ -36,6 +36,11 @@ export default function Home() {
     );
 
     setUser(result.user);
+
+localStorage.setItem(
+  "user",
+  JSON.stringify(result.user)
+);
   } catch (error) {
     console.error(error);
   }
@@ -105,29 +110,34 @@ export default function Home() {
       <p className="text-gray-400 text-lg md:text-xl mb-10 text-center max-w-xl z-10">
         Play against friends, battle AI, or create real-time multiplayer rooms.
       </p>
-
       {/* Existing buttons */}
-      <div className="flex flex-col md:flex-row gap-4 z-10 mb-8">
-        <Link href="/game">
-          <button className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-semibold hover:scale-105 transition">
-            <Play size={20} />
-            Play Now
-          </button>
-        </Link>
+<div className="flex flex-col md:flex-row gap-4 z-10 mb-8">
 
-        <Link href="/game?mode=ai">
-  <button className="flex items-center gap-2 border border-gray-600 px-6 py-3 rounded-xl hover:bg-gray-800 transition">
-    <Bot size={20} />
-    Play vs AI
-  </button>
-</Link>
+  {/* Play Now */}
+  <Link href="/game">
+    <button className="flex items-center gap-2 border border-gray-600 px-6 py-3 rounded-xl hover:bg-blue-500 hover:border-blue-500 hover:scale-105 transition duration-300">
+      <Play size={20} />
+      Play Now
+    </button>
+  </Link>
 
-        <button className="flex items-center gap-2 border border-yellow-500 px-6 py-3 rounded-xl hover:bg-yellow-500 hover:text-black transition">
-          <Trophy size={20} />
-          Leaderboard
-        </button>
-      </div>
+  {/* Play vs AI */}
+  <Link href="/game?mode=ai">
+    <button className="flex items-center gap-2 border border-gray-600 px-6 py-3 rounded-xl hover:bg-purple-500 hover:border-purple-500 hover:scale-105 transition duration-300">
+      <Bot size={20} />
+      Play vs AI
+    </button>
+  </Link>
 
+  {/* Leaderboard */}
+  <Link href="/leaderboard">
+    <button className="flex items-center gap-2 border border-gray-600 px-6 py-3 rounded-xl hover:bg-yellow-500 hover:border-yellow-500 hover:text-black hover:scale-105 transition duration-300">
+      <Trophy size={20} />
+      Leaderboard
+    </button>
+  </Link>
+
+</div>
       {/* NEW Multiplayer Section */}
 <div className="bg-white/10 backdrop-blur-xl border border-gray-700 p-6 rounded-2xl z-10 w-full max-w-md">
   <h2 className="text-2xl font-bold mb-4 text-center flex items-center justify-center gap-2">

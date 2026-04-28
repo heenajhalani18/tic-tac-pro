@@ -22,12 +22,21 @@ export class MultiplayerService {
   winner: string,
   gameMode: string
 ) {
+  const currentUser =
+    JSON.parse(
+      localStorage.getItem("user") || "null"
+    );
+
   await addDoc(
     collection(db, "matchHistory"),
     {
       winner,
+      winnerName:
+        currentUser?.displayName ||
+        winner,
       gameMode,
-      timestamp: serverTimestamp(),
+      timestamp:
+        serverTimestamp(),
     }
   );
 }

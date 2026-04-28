@@ -255,14 +255,7 @@ if (
                 onClick={() => setGameMode("pvp")}
                 className="bg-white text-black px-6 py-3 rounded-xl font-semibold"
               >
-                Player vs Player
-              </button>
-
-              <button
-                onClick={() => setGameMode("ai")}
-                className="border border-gray-600 px-6 py-3 rounded-xl"
-              >
-                Player vs AI
+                Start Local Match
               </button>
             </div>
           </div>
