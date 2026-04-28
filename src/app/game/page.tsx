@@ -4,8 +4,15 @@ import { useState } from "react";
 import Confetti from "react-confetti";
 import { Game } from "@/models/Game";
 import { BotStrategy } from "@/strategies/BotStrategy";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { MultiplayerService } from "@/services/MultiplayerService";
 
 export default function GamePage() {
+  const [playerSymbol, setPlayerSymbol] = useState<string>("X");
+  const searchParams = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const roomId = searchParams.get("roomId");
   const [game, setGame] = useState(new Game());
   const [isDraw, setIsDraw] = useState(false);
   const [gameMode, setGameMode] = useState<string | null>(null);
@@ -16,43 +23,108 @@ export default function GamePage() {
     aiWins: 0,
     draws: 0,
   });
+  useEffect(() => {
+  if (modeParam === "ai") {
+    setGameMode("ai");
+  }
+}, [modeParam]);
+  useEffect(() => {
+  if (!roomId) return;
+  if (roomId) {
+  const existingPlayer =
+    localStorage.getItem(`player-${roomId}`);
 
-  const handleClick = (index: number) => {
-    if (!gameMode || game.winner || isDraw) return;
+  if (existingPlayer) {
+    setPlayerSymbol(existingPlayer);
+  } else {
+    const randomPlayer =
+      Math.random() > 0.5 ? "X" : "O";
 
-    const updatedGame = new Game();
+    localStorage.setItem(
+      `player-${roomId}`,
+      randomPlayer
+    );
 
-    updatedGame.board.grid = [...game.board.grid];
-    updatedGame.currentPlayerIndex = game.currentPlayerIndex;
-    updatedGame.winner = game.winner;
+    setPlayerSymbol(randomPlayer);
+  }
+}
+  const unsubscribe =
+    MultiplayerService.listenToRoom(
+      roomId,
+      (roomData) => {
+        const updatedGame = new Game();
 
-    const moveSuccess = updatedGame.makeMove(index);
+        updatedGame.board.grid = roomData.board;
+        updatedGame.winner = roomData.winner;
 
-    if (!moveSuccess) return;
+        updatedGame.currentPlayerIndex =
+          roomData.currentTurn === "X" ? 0 : 1;
 
-    // Human winner logic
-    if (updatedGame.winner) {
-      if (updatedGame.winner === "X") {
-        setScores((prev) => ({
-          ...prev,
-          xWins: prev.xWins + 1,
-        }));
-      } else if (updatedGame.winner === "O") {
-        if (gameMode === "ai") {
-          setScores((prev) => ({
-            ...prev,
-            aiWins: prev.aiWins + 1,
-          }));
-        } else {
-          setScores((prev) => ({
-            ...prev,
-            oWins: prev.oWins + 1,
-          }));
-        }
+        setGame(updatedGame);
       }
-    } 
-    else if (!updatedGame.board.grid.includes("")) {
+    );
+
+  return () => unsubscribe();
+}, [roomId]);
+useEffect(() => {
+  const isAiMode =
+    gameMode === "ai" || modeParam === "ai";
+
+  if (!isAiMode) return;
+
+  // AI should only play when it's O's turn
+  if (
+    game.getCurrentPlayer().symbol !== "O"
+  )
+    return;
+
+  if (
+    game.winner ||
+    isDraw ||
+    game.board.grid.every(
+      (cell) => cell !== ""
+    )
+  )
+    return;
+
+  const timer = setTimeout(() => {
+    const aiGame = new Game();
+
+    aiGame.board.grid = [
+      ...game.board.grid,
+    ];
+    aiGame.currentPlayerIndex = 1; // O
+    aiGame.winner = game.winner;
+
+    const bestMove =
+      BotStrategy.getBestMove(
+        aiGame.board.grid
+      );
+
+    const aiMoveSuccess =
+      aiGame.makeMove(bestMove);
+
+    if (!aiMoveSuccess) return;
+
+    if (aiGame.winner) {
+      MultiplayerService.saveMatchHistory(
+        aiGame.winner,
+        "ai"
+      );
+
+      setScores((prev) => ({
+        ...prev,
+        aiWins: prev.aiWins + 1,
+      }));
+    } else if (
+      !aiGame.board.grid.includes("")
+    ) {
       setIsDraw(true);
+
+      MultiplayerService.saveMatchHistory(
+        "Draw",
+        "ai"
+      );
 
       setScores((prev) => ({
         ...prev,
@@ -60,53 +132,93 @@ export default function GamePage() {
       }));
     }
 
-    setGame(updatedGame);
+    setGame(aiGame);
+  }, 500);
 
-    // AI Move Logic
-    if (
-      gameMode === "ai" &&
-      !updatedGame.winner &&
-      !updatedGame.board.grid.includes("")
-    ) {
-      setTimeout(() => {
-        const aiGame = new Game();
+  return () => clearTimeout(timer);
+}, [game, gameMode, modeParam, isDraw]);
+  const handleClick = (index: number) => {
+  if (!gameMode && !modeParam) return;
 
-        aiGame.board.grid = [...updatedGame.board.grid];
-        aiGame.currentPlayerIndex =
-          updatedGame.currentPlayerIndex;
-        aiGame.winner = updatedGame.winner;
+// Prevent clicking when AI's turn
+if (
+  (gameMode === "ai" || modeParam === "ai") &&
+  game.getCurrentPlayer().symbol === "O"
+) {
+  return;
+}
+  if (game.winner || isDraw) return;
 
-        const emptyCells = aiGame.board.grid.filter(
-          (cell) => cell === ""
-        );
+  const updatedGame = new Game();
 
-        if (emptyCells.length > 0) {
-          const bestMove = BotStrategy.getBestMove(
-            aiGame.board.grid
-          );
+  updatedGame.board.grid = [...game.board.grid];
+  updatedGame.currentPlayerIndex = game.currentPlayerIndex;
+  updatedGame.winner = game.winner;
 
-          aiGame.makeMove(bestMove);
+  const moveSuccess = updatedGame.makeMove(index);
 
-          if (aiGame.winner) {
-            setScores((prev) => ({
-              ...prev,
-              aiWins: prev.aiWins + 1,
-            }));
-          } 
-          else if (!aiGame.board.grid.includes("")) {
-            setIsDraw(true);
+  if (!moveSuccess) return;
 
-            setScores((prev) => ({
-              ...prev,
-              draws: prev.draws + 1,
-            }));
-          }
+  // Human winner logic
+  if (updatedGame.winner) {
+    MultiplayerService.saveMatchHistory(
+      updatedGame.winner,
+      gameMode || modeParam || "unknown"
+    );
 
-          setGame(aiGame);
-        }
-      }, 500);
+    if (updatedGame.winner === "X") {
+      setScores((prev) => ({
+        ...prev,
+        xWins: prev.xWins + 1,
+      }));
+    } else if (updatedGame.winner === "O") {
+      if (
+        gameMode === "ai" ||
+        modeParam === "ai"
+      ) {
+        setScores((prev) => ({
+          ...prev,
+          aiWins: prev.aiWins + 1,
+        }));
+      } else {
+        setScores((prev) => ({
+          ...prev,
+          oWins: prev.oWins + 1,
+        }));
+      }
     }
-  };
+  }
+
+  // Draw logic
+  else if (!updatedGame.board.grid.includes("")) {
+    setIsDraw(true);
+
+    MultiplayerService.saveMatchHistory(
+      "Draw",
+      gameMode || modeParam || "unknown"
+    );
+
+    setScores((prev) => ({
+      ...prev,
+      draws: prev.draws + 1,
+    }));
+  }
+
+  setGame(updatedGame);
+
+  // Multiplayer sync
+  if (roomId) {
+    MultiplayerService.updateBoard(
+      roomId,
+      updatedGame.board.grid,
+      updatedGame.getCurrentPlayer().symbol,
+      updatedGame.winner
+    );
+  }
+
+  // AI Move Logic
+  
+};
 
   const resetGame = () => {
     setGame(new Game());
@@ -122,15 +234,15 @@ export default function GamePage() {
       <div className="absolute bottom-20 right-20 w-72 h-72 bg-purple-500 rounded-full blur-3xl opacity-20 animate-pulse"></div>
 
       {/* Confetti */}
-      {game.winner && (
-        <Confetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-        />
-      )}
+      {game.winner === playerSymbol && (
+  <Confetti
+    width={window.innerWidth}
+    height={window.innerHeight}
+  />
+)}
 
       {/* Mode selection */}
-      {!gameMode && (
+      {!gameMode && !modeParam && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-white/10 backdrop-blur-xl border border-gray-700 p-8 rounded-2xl text-center shadow-2xl">
             <h2 className="text-2xl font-bold mb-6">
@@ -180,19 +292,28 @@ export default function GamePage() {
       </div>
 
       {/* Game Status */}
-      <h1 className="text-4xl font-bold mb-8 text-center z-10">
-        {game.winner
-          ? `${game.winner} Wins 🎉`
-          : isDraw
-          ? "It's a Draw 🤝"
-          : `${game.getCurrentPlayer().symbol}'s Turn`}
-      </h1>
+<h1 className="text-4xl font-bold mb-4 text-center z-10">
+  {game.winner
+    ? `${game.winner} Wins 🎉`
+    : isDraw
+    ? "It's a Draw 🤝"
+    : `${game.getCurrentPlayer().symbol}'s Turn`}
+</h1>
 
-      {/* Board */}
-      <div className="grid grid-cols-3 gap-3 mb-8 z-10">
+{/* Multiplayer Room ID */}
+{roomId && (
+  <p className="mb-4 text-green-400 z-10 font-medium">
+    Multiplayer Room: {roomId}
+  </p>
+)}
+
+
+{/* Board */}
+<div className="grid grid-cols-3 gap-3 mb-8 z-10">
         {game.board.grid.map((cell, index) => (
           <button
             key={index}
+            
             onClick={() => handleClick(index)}
             className="w-24 h-24 bg-white/10 backdrop-blur-md border border-gray-700 rounded-2xl text-4xl font-bold hover:scale-105 hover:bg-white/20 transition flex items-center justify-center shadow-lg"
           >
@@ -218,4 +339,4 @@ export default function GamePage() {
       </button>
     </main>
   );
-}
+  }
