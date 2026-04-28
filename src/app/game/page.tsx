@@ -5,10 +5,11 @@ import Confetti from "react-confetti";
 import { Game } from "@/models/Game";
 import { BotStrategy } from "@/strategies/BotStrategy";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useEffect } from "react";
 import { MultiplayerService } from "@/services/MultiplayerService";
 
-export default function GamePage() {
+function GameContent() {
   const [playerSymbol, setPlayerSymbol] = useState<string>("X");
   const searchParams = useSearchParams();
   const modeParam = searchParams.get("mode");
@@ -340,3 +341,11 @@ if (
     </main>
   );
   }
+
+export default function GamePage() {
+  return (
+    <Suspense fallback={<div className="text-white min-h-screen flex items-center justify-center bg-black">Loading...</div>}>
+      <GameContent />
+    </Suspense>
+  );
+}
