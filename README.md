@@ -1,36 +1,166 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tic Tac Pro 🎮
 
-## Getting Started
+A full-stack real-time multiplayer Tic Tac Toe platform built using **Next.js, TypeScript, Firebase, and Tailwind CSS**, designed with **Low-Level Design (LLD) principles** and deployed on Vercel.
 
-First, run the development server:
+🔗 **Live Demo:** https://tic-tac-pro-tau.vercel.app/  
+🔗 **GitHub Repo:** https://github.com/heenajhalani18/tic-tac-pro
+
+---
+
+## Features ✨
+
+### 🎯 Multiple Game Modes
+- Local Player vs Player mode
+- Smart AI mode
+- Real-time Multiplayer mode
+
+### 🤖 AI Opponent
+- Implemented bot gameplay using strategy-based move selection
+- Automatically plays against users in real time
+
+### 🌐 Real-Time Multiplayer
+- Create room
+- Join room using room code
+- Live board synchronization using Firebase Firestore
+
+### 🔐 Google Authentication
+- Sign in using Google account
+- Authentication handled using Firebase Auth
+
+### 🏆 Leaderboard
+- Tracks top players based on wins
+- Displays rankings dynamically
+
+### 📜 Match History
+- Stores completed match data
+- Tracks winners and game mode
+
+### 🎨 Premium UI
+- Modern glassmorphism UI
+- Hover animations
+- Confetti winner celebration
+- Responsive design
+
+---
+
+# Tech Stack 🛠️
+
+### Frontend
+- :contentReference[oaicite:1]{index=1}
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+
+### Backend / Database
+- :contentReference[oaicite:2]{index=2} Firestore
+- Firebase Authentication
+
+### Deployment
+- :contentReference[oaicite:3]{index=3}
+
+---
+
+# Low Level Design Implementation 🧠
+
+This project was intentionally built using modular LLD principles:
+
+### Models
+- `Game.ts`
+- `Board.ts`
+- `Player.ts`
+
+### Strategy Pattern
+- `BotStrategy.ts`
+- `WinningStrategy.ts`
+
+### Services
+- `MultiplayerService.ts`
+
+This architecture makes the code scalable, maintainable, and easy to extend.
+
+---
+
+# Project Architecture
+
+```bash
+src/
+ ├── app/
+ │   ├── page.tsx
+ │   ├── game/
+ │   ├── leaderboard/
+ │
+ ├── models/
+ │   ├── Game.ts
+ │   ├── Board.ts
+ │   ├── Player.ts
+ │
+ ├── strategies/
+ │   ├── BotStrategy.ts
+ │   ├── WinningStrategy.ts
+ │
+ ├── services/
+ │   ├── MultiplayerService.ts
+ │
+ ├── firebase/
+ │   ├── config.ts
+```
+
+---
+
+# Challenges Faced 🚀
+
+- Managing AI move logic with React state updates
+- Fixing multiplayer synchronization issues
+- Handling Google Auth deployment issues
+- Resolving Next.js production deployment errors
+- Building scalable game architecture using LLD
+
+---
+
+# Future Improvements
+
+- Sound effects
+- Friend invite links
+- Minimax AI
+- Player profiles
+- Match analytics dashboard
+
+---
+
+# Installation & Setup
+
+Clone repository:
+
+```bash
+git clone https://github.com/heenajhalani18/tic-tac-pro.git
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run locally:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Screenshots
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+(Add screenshots/gifs here later)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Author
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Heena Jhalani**  
+Computer Science (AI) Student  
+Banasthali Vidyapith
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If you liked this project, feel free to ⭐ the repo.
